@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}About PE File Analyzer{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0"><i class="fas fa-info-circle me-2"></i>About This Tool</h4>
+            </div>
+            <div class="card-body">
+                <h5>PE File Analyzer</h5>
+                <p>This tool performs advanced static analysis on Windows Portable Executable (PE) files to detect potential malicious patterns and characteristics. It leverages the EMBER (Endgame Malware BEnchmark for Research) model for malware classification.</p>
+                
+                <h5 class="mt-4">Features and Capabilities</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <ul class="list-group mb-3">
+                            <li class="list-group-item">
+                                <i class="fas fa-search text-primary me-2"></i>
+                                <strong>PE File Structure Analysis</strong>
+                                <p class="mb-0 text-muted">Examines headers, sections, and overall file structure</p>
+                            </li>
+                            <li class="list-group-item">
+                                <i class="fas fa-calculator text-primary me-2"></i>
+                                <strong>Entropy Analysis</strong>
+                                <p class="mb-0 text-muted">Detects packed/encrypted content using entropy measurements</p>
+                            </li>
+                            <li class="list-group-item">
+                                <i class="fas fa-table text-primary me-2"></i>
+                                <strong>Import/Export Analysis</strong>
+                                <p class="mb-0 text-muted">Examines API imports and exports for suspicious patterns</p>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="list-group mb-3">
+                            <li class="list-group-item">
+                                <i class="fas fa-font text-primary me-2"></i>
+                                <strong>String Analysis</strong>
+                                <p class="mb-0 text-muted">Extracts and analyzes embedded strings</p>
+                            </li>
+                            <li class="list-group-item">
+                                <i class="fas fa-shield-alt text-primary me-2"></i>
+                                <strong>Signature Validation</strong>
+                                <p class="mb-0 text-muted">Checks for digital signatures and certificates</p>
+                            </li>
+                            <li class="list-group-item">
+                                <i class="fas fa-brain text-primary me-2"></i>
+                                <strong>Machine Learning Classification</strong>
+                                <p class="mb-0 text-muted">Uses EMBER model to assess maliciousness</p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <h5 class="mt-4">How It Works</h5>
+                <p>This application uses a custom feature extractor that works with the EMBER malware detection model. The process includes:</p>
+                <ol>
+                    <li>File upload and validation</li>
+                    <li>Feature extraction using the pefile library and custom algorithms</li>
+                    <li>Feature vector preparation for the EMBER model</li>
+                    <li>Classification and risk scoring</li>
+                    <li>Detailed report generation</li>
+                </ol>
+                
+                <div class="alert alert-warning mt-4">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Important Notice:</strong> This tool is intended for research and educational purposes only. It should not replace comprehensive security scanning solutions.
+                </div>
+                
+                <h5 class="mt-4">Technical Components</h5>
+                <p>The application is built with:</p>
+                <ul>
+                    <li><strong>Backend:</strong> Python, Flask</li>
+                    <li><strong>PE Analysis:</strong> pefile, custom feature extraction</li>
+                    <li><strong>Machine Learning:</strong> LightGBM with EMBER model</li>
+                    <li><strong>Frontend:</strong> HTML, CSS, Bootstrap, JavaScript</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

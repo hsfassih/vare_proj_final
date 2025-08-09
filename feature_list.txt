@@ -1,0 +1,122 @@
+Feature List:
+- total_operations
+- unique_processes
+- unique_paths
+- op_RegOpenKey
+- op_RegQueryKey
+- op_RegQueryValue
+- op_RegCloseKey
+- op_WriteFile
+- op_CreateFile
+- op_CloseFile
+- op_RegSetInfoKey
+- op_CreateFileMapping
+- op_RegEnumKey
+- op_QueryBasicInformationFile
+- op_RegEnumValue
+- op_QueryStandardInformationFile
+- op_ReadFile
+- op_QueryDirectory
+- op_QueryNameInformationFile
+- op_Load Image
+- op_QueryInformationVolume
+- op_QueryAllInformationFile
+- op_RegCreateKey
+- op_FileSystemControl
+- op_QuerySecurityFile
+- op_Thread Create
+- op_UnlockFileSingle
+- op_LockFile
+- op_RegSetValue
+- op_Thread Exit
+- op_QueryNetworkOpenInformationFile
+- op_QueryNormalizedNameInformationFile
+- op_DeviceIoControl
+- op_QuerySizeInformationVolume
+- op_UDP Send
+- op_SetStorageReservedIdInformation
+- op_NotifyChangeDirectory
+- op_QueryIdInformation
+- op_RegQueryKeySecurity
+- op_QueryRemoteProtocolInformation
+- op_FlushBuffersFile
+- op_SetSecurityFile
+- op_QueryAttributeInformationVolume
+- op_SetDispositionInformationFile
+- op_Process Create
+- op_Process Start
+- op_SetBasicInformationFile
+- op_SetEndOfFileInformationFile
+- op_QueryAttributeTagFile
+- op_RegDeleteKey
+- op_Process Exit
+- op_SetDispositionInformationEx
+- op_RegLoadKey
+- op_RegDeleteValue
+- op_SetAllocationInformationFile
+- op_QueryFullSizeInformationVolume
+- op_RegQueryMultipleValueKey
+- op_QueryEaInformationFile
+- op_SetRenameInformationFile
+- op_QueryStreamInformationFile
+- result_SUCCESS
+- result_NAME NOT FOUND
+- result_BUFFER OVERFLOW
+- result_REPARSE
+- result_FILE LOCKED WITH ONLY READERS
+- result_PATH NOT FOUND
+- result_NOT REPARSE POINT
+- result_BUFFER TOO SMALL
+- result_NO MORE ENTRIES
+- result_INVALID PARAMETER
+- result_IS DIRECTORY
+- result_END OF FILE
+- result_NAME COLLISION
+- result_NO MORE FILES
+- result_FILE LOCKED WITH WRITERS
+- result_NO SUCH FILE
+- result_CANCELLED
+- result_ACCESS DENIED
+- result_NAME INVALID
+- result_SHARING VIOLATION
+- result_BAD NETWORK PATH
+- result_NO MORE MATCHES
+- proc_Explorer_EXE
+- proc_svchost_exe
+- proc_WerFault_exe
+- proc_ctfmon_exe
+- proc_wermgr_exe
+- proc_wmiprvse_exe
+- proc_python_exe
+- proc_vm3dservice_exe
+- proc_csrss_exe
+- proc_vmtoolsd_exe
+- keys_deleted
+- keys_added
+- values_deleted
+- values_added
+- values_modified
+- total_changes
+- reg_autorun
+- reg_user_autorun
+- reg_system_control
+- reg_win_nt
+- reg_explorer
+- op_QueryFileInternalInformationFile
+- op_RegSetKeySecurity
+- op_SetRenameInformationEx
+- result_OPLOCK HANDLE CLOSED
+- result_CANNOT DELETE
+- result_PRIVILEGE NOT HELD
+- result_OBJECTID NOT FOUND
+- proc_powershell_exe
+- proc_malware2_exe
+- proc_git_exe
+- proc_SearchFilterHost_exe
+- op_QueryEAFile
+- result_INVALID DEVICE REQUEST
+- proc_msiexec_exe
+- proc_malware3_exe
+- result_NOT GRANTED
+- result_RANGE NOT LOCKED
+- proc_malware4_exe

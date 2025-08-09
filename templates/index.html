@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}PE File Analyzer - Upload{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-file-upload me-2"></i>Upload PE File for Analysis</h4>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <img src="https://img.icons8.com/color/96/000000/exe.png" alt="EXE Icon" class="img-fluid" style="max-width: 100px;">
+                    <h5 class="mt-3">Analyze Windows Executable Files</h5>
+                    <p class="text-muted">
+                        Upload a PE file (.exe, .dll, .sys, etc.) to analyze for malicious characteristics.
+                    </p>
+                </div>
+
+                <form action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data" class="mb-3">
+                    <div class="mb-3">
+                        <label for="file" class="form-label">Select PE File</label>
+                        <input class="form-control" type="file" id="file" name="file" required>
+                        <div class="form-text">Supported file types: .exe, .dll, .sys, .scr, .ocx, .cpl</div>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-upload me-2"></i>Upload and Analyze
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mt-4 shadow">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>About This Tool</h5>
+            </div>
+            <div class="card-body">
+                <p>This tool performs static analysis on Windows PE (Portable Executable) files to identify potential malicious characteristics.</p>
+                <p>The analysis includes:</p>
+                <ul>
+                    <li>File header analysis</li>
+                    <li>Section entropy measurement</li>
+                    <li>Import/Export table analysis</li>
+                    <li>String extraction</li>
+                    <li>Resource detection</li>
+                </ul>
+                <p class="mb-0">Results are compared against the EMBER malware detection model to provide a risk assessment.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

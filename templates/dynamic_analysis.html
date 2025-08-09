@@ -1,0 +1,352 @@
+{% extends 'base.html' %}
+
+{% block title %}Dynamic Analysis Results{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-dark text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-microscope me-2"></i>
+                    Dynamic Analysis Results: {{ result.filename }}
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Dynamic analysis examines the behavior of the executable during runtime, capturing file system, registry, network, and process activities.
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <h5 class="mb-3">
+                            <i class="fas fa-chart-pie me-2"></i>Malware Classification Result
+                        </h5>
+                        <div class="card">
+                            <div class="card-body">
+                                {% if result.prediction %}
+                                    <h3 class="text-{% if result.prediction_confidence > 0.8 %}danger{% elif result.prediction_confidence > 0.6 %}warning{% else %}secondary{% endif %}">
+                                        {{ result.prediction }}
+                                    </h3>
+                                    <p class="mb-1">Confidence: {{ "%.2f"|format(result.prediction_confidence * 100) }}%</p>
+                                    <div class="progress mb-3" style="height: 20px">
+                                        <div class="progress-bar {% if result.prediction_confidence > 0.8 %}bg-danger{% elif result.prediction_confidence > 0.6 %}bg-warning{% else %}bg-info{% endif %}" 
+                                             role="progressbar" 
+                                             style="width: {{ result.prediction_confidence * 100 }}%" 
+                                             aria-valuenow="{{ result.prediction_confidence * 100 }}" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="100">
+                                            {{ "%.0f"|format(result.prediction_confidence * 100) }}%
+                                        </div>
+                                    </div>
+                                    
+                                    {% if result.top_predictions %}
+                                        <h6>Top Predictions:</h6>
+                                        <ul class="list-group">
+                                            {% for pred in result.top_predictions %}
+                                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                    {{ pred.family }}
+                                                    <span class="badge {% if pred.confidence > 0.8 %}bg-danger{% elif pred.confidence > 0.5 %}bg-warning{% else %}bg-info{% endif %} rounded-pill">
+                                                        {{ "%.2f"|format(pred.confidence * 100) }}%
+                                                    </span>
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                {% else %}
+                                    <div class="alert alert-warning">
+                                        No classification result available.
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h5 class="mb-3">
+                            <i class="fas fa-tasks me-2"></i>Behavioral Summary
+                        </h5>
+                        <ul class="list-group">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Files Created:</span>
+                                <strong>{{ result.files_created|length }}</strong>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Registry Keys Modified:</span>
+                                <strong>{{ result.registry_keys_modified|length }}</strong>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Network Connections:</span>
+                                <strong>{{ result.network_connections|length }}</strong>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Processes Spawned:</span>
+                                <strong>{{ result.processes|length }}</strong>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Analysis Duration:</span>
+                                <strong>{{ result.duration|default('N/A') }}</strong>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confusion Matrix Card -->
+<div class="card shadow mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-th me-2"></i>Confusion Matrix
+        </h5>
+    </div>
+    <div class="card-body text-center">
+        {% if result.confusion_matrix_path %}
+            <img src="{{ url_for('static', filename=result.confusion_matrix_path) }}" class="img-fluid" alt="Confusion Matrix">
+        {% else %}
+            <div class="alert alert-info">Confusion matrix not available.</div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Behavioral Analysis Tabs -->
+<div class="card shadow">
+    <div class="card-header">
+        <ul class="nav nav-tabs card-header-tabs" id="behaviorTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="files-tab" data-bs-toggle="tab" data-bs-target="#files" type="button" role="tab">
+                    <i class="fas fa-file me-1"></i>Files
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="registry-tab" data-bs-toggle="tab" data-bs-target="#registry" type="button" role="tab">
+                    <i class="fas fa-database me-1"></i>Registry
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="network-tab" data-bs-toggle="tab" data-bs-target="#network" type="button" role="tab">
+                    <i class="fas fa-network-wired me-1"></i>Network
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="processes-tab" data-bs-toggle="tab" data-bs-target="#processes" type="button" role="tab">
+                    <i class="fas fa-cogs me-1"></i>Processes
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="feature-importance-tab" data-bs-toggle="tab" data-bs-target="#feature-importance" type="button" role="tab">
+                    <i class="fas fa-chart-bar me-1"></i>Feature Importance
+                </button>
+            </li>
+        </ul>
+    </div>
+    <div class="card-body">
+        <div class="tab-content" id="behaviorTabContent">
+            <!-- Files Tab -->
+            <div class="tab-pane fade show active" id="files" role="tabpanel">
+                <h5 class="mb-3">File System Activity</h5>
+                {% if result.files_created %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Path</th>
+                                    <th>Operation</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for file in result.files_created %}
+                                    <tr>
+                                        <td>{{ file.path }}</td>
+                                        <td>
+                                            <span class="badge bg-{{ file.operation|lower == 'created' and 'success' or (file.operation|lower == 'deleted' and 'danger' or 'info') }}">
+                                                {{ file.operation }}
+                                            </span>
+                                        </td>
+                                        <td>{{ file.time }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">No file system activity detected.</div>
+                {% endif %}
+            </div>
+            
+            <!-- Registry Tab -->
+            <div class="tab-pane fade" id="registry" role="tabpanel">
+                <h5 class="mb-3">Registry Activity</h5>
+                {% if result.registry_keys_modified %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Key</th>
+                                    <th>Operation</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for reg in result.registry_keys_modified %}
+                                    <tr>
+                                        <td>{{ reg.key }}</td>
+                                        <td>
+                                            <span class="badge bg-{{ reg.operation|lower == 'created' and 'success' or (reg.operation|lower == 'deleted' and 'danger' or 'primary') }}">
+                                                {{ reg.operation }}
+                                            </span>
+                                        </td>
+                                        <td>{{ reg.time }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">No registry activity detected.</div>
+                {% endif %}
+            </div>
+            
+            <!-- Network Tab -->
+            <div class="tab-pane fade" id="network" role="tabpanel">
+                <h5 class="mb-3">Network Activity</h5>
+                {% if result.network_connections %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Destination</th>
+                                    <th>Port</th>
+                                    <th>Protocol</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for conn in result.network_connections %}
+                                    <tr>
+                                        <td>
+                                            <span{% if conn.is_malicious %} class="text-danger"{% endif %}>{{ conn.destination }}</span>
+                                            {% if conn.is_malicious %}
+                                                <i class="fas fa-exclamation-triangle text-danger" data-bs-toggle="tooltip" title="Suspicious connection"></i>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ conn.port }}</td>
+                                        <td>{{ conn.protocol }}</td>
+                                        <td>{{ conn.time }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">No network activity detected.</div>
+                {% endif %}
+            </div>
+            
+            <!-- Processes Tab -->
+            <div class="tab-pane fade" id="processes" role="tabpanel">
+                <h5 class="mb-3">Process Activity</h5>
+                {% if result.processes %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Process Name</th>
+                                    <th>PID</th>
+                                    <th>Parent PID</th>
+                                    <th>Command Line</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for proc in result.processes %}
+                                    <tr>
+                                        <td>
+                                            <span{% if proc.is_suspicious %} class="text-danger"{% endif %}>{{ proc.name }}</span>
+                                            {% if proc.is_suspicious %}
+                                                <i class="fas fa-exclamation-triangle text-danger" data-bs-toggle="tooltip" title="Suspicious process"></i>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ proc.pid }}</td>
+                                        <td>{{ proc.ppid }}</td>
+                                        <td><small>{{ proc.cmd }}</small></td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">No process activity detected.</div>
+                {% endif %}
+            </div>
+            
+            <!-- Feature Importance Tab -->
+            <div class="tab-pane fade" id="feature-importance" role="tabpanel">
+                <h5 class="mb-3">Feature Importance</h5>
+                {% if result.feature_importance_path %}
+                    <div class="text-center mb-4">
+                        <img src="{{ url_for('static', filename=result.feature_importance_path) }}" class="img-fluid" alt="Feature Importance">
+                    </div>
+                    {% if result.important_features %}
+                        <h6>Top Important Features:</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Feature</th>
+                                        <th>Importance</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for feature in result.important_features %}
+                                        <tr>
+                                            <td>{{ feature.name }}</td>
+                                            <td>
+                                                <div class="progress">
+                                                    <div class="progress-bar bg-primary" role="progressbar" 
+                                                         style="width: {{ feature.importance * 100 }}%" 
+                                                         aria-valuenow="{{ feature.importance * 100 }}" 
+                                                         aria-valuemin="0" 
+                                                         aria-valuemax="100">
+                                                        {{ "%.2f"|format(feature.importance) }}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="alert alert-info">Feature importance data not available.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="text-center mt-4">
+    <a href="{{ url_for('analyze') }}" class="btn btn-primary me-2">
+        <i class="fas fa-arrow-left me-2"></i>Back to Static Analysis
+    </a>
+    <a href="{{ url_for('index') }}" class="btn btn-secondary">
+        <i class="fas fa-upload me-2"></i>Analyze Another File
+    </a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,10 @@
+# Python cache files
+__pycache__/
+
+# Output directory
+OUTPUT/
+
+# Executable files
+Procmon.exe
+Procmon64.exe
+Regshot_cmd-x64-ANSI.exe

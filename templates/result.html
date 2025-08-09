@@ -1,0 +1,1179 @@
+{% extends 'base.html' %} {% block title %}Analysis Results - {{ result.filename
+}}{% endblock %} {% block extra_css %}
+<style>
+  .score-gauge {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    position: relative;
+    margin: 0 auto;
+  }
+  .score-value {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2.5rem;
+    font-weight: bold;
+  }
+  .verdict-badge {
+    font-size: 1.2rem;
+  }
+  .nav-tabs .nav-link.active {
+    font-weight: bold;
+  }
+  .string-list {
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  .file-info-circle {
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    margin-right: 10px;
+    color: white;
+  }
+  .entropy-bar {
+    height: 15px;
+    border-radius: 3px;
+    position: relative;
+  }
+  .entropy-indicator {
+    position: absolute;
+    height: 100%;
+    top: 0;
+    left: 0;
+    border-radius: 3px;
+  }
+  .progress-bar-vertical {
+    width: 20px;
+    min-height: 100px;
+    display: flex;
+    align-items: flex-end;
+    margin-right: 10px;
+    margin-bottom: 0;
+  }
+  .progress-bar-vertical .progress-bar {
+    width: 100%;
+    height: 0;
+    transition: height 0.6s ease;
+  }
+  .section-details {
+    border-left: 4px solid;
+    padding-left: 15px;
+    margin-bottom: 20px;
+  }
+  .section-name {
+    font-weight: bold;
+    font-size: 16px;
+  }
+  .entropy-value {
+    font-size: 18px;
+    font-weight: bold;
+  }
+  .characteristic-badge {
+    margin: 2px;
+  }
+  .header-info td,
+  .header-info th {
+    padding: 6px 10px;
+  }
+  .resource-row {
+    transition: all 0.2s;
+  }
+  .resource-row:hover {
+    background-color: #f8f9fa;
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="row mb-3">
+  <div class="col-12">
+    <div class="card shadow">
+      <div class="card-header bg-dark text-white">
+        <h4 class="mb-0">
+          <i class="fas fa-file-code me-2"></i>
+          Analysis Results: {{ result.filename }}
+        </h4>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <!-- Malware Score & Verdict -->
+          <div class="col-md-4 text-center mb-4">
+            <h5>Maliciousness Score</h5>
+            <div
+              class="score-gauge bg-{{ result.verdict_class }}"
+              style="opacity: 0.2"
+            >
+              <div class="score-value">{{ "%.2f"|format(result.score) }}</div>
+            </div>
+            <div class="mt-3">
+              <span
+                class="badge bg-{{ result.verdict_class }} p-2 verdict-badge"
+              >
+                <i
+                  class="fas fa-{% if result.verdict_class == 'success' %}check-circle{% elif result.verdict_class == 'danger' %}exclamation-triangle{% else %}exclamation-circle{% endif %} me-1"
+                ></i>
+                {{ result.verdict }}
+              </span>
+            </div>
+          </div>
+
+          <!-- File Information -->
+          <div class="col-md-8">
+            <h5 class="mb-3">
+              <i class="fas fa-info-circle me-2"></i>File Information
+            </h5>
+            <div class="row">
+              <div class="col-md-6">
+                <ul class="list-group">
+                  <li class="list-group-item d-flex justify-content-between">
+                    <span>File Size:</span>
+                    <strong>{{ result.file_size|filesizeformat }}</strong>
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between">
+                    <span>Compile Time:</span>
+                    <strong>{{ result.compile_time }}</strong>
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between">
+                    <span>Sections:</span>
+                    <strong>{{ result.num_sections }}</strong>
+                  </li>
+                </ul>
+              </div>
+              <div class="col-md-6">
+                <ul class="list-group">
+                  <li class="list-group-item d-flex justify-content-between">
+                    <span>Digital Signature:</span>
+                    <strong
+                      >{% if result.has_signature %}Yes{% else %}No{% endif
+                      %}</strong
+                    >
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between">
+                    <span>Debug Info:</span>
+                    <strong
+                      >{% if result.has_debug %}Present{% else %}Absent{% endif
+                      %}</strong
+                    >
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between">
+                    <span>Average Entropy:</span>
+                    <strong
+                      >{{ "%.2f"|format(result.sections_mean_entropy)
+                      }}/8.0</strong
+                    >
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Risk Indicators -->
+        {% if result.risk_indicators %}
+        <div class="mt-4">
+          <h5 class="text-danger">
+            <i class="fas fa-exclamation-triangle me-2"></i>Risk Indicators
+          </h5>
+          <ul class="list-group">
+            {% for indicator in result.risk_indicators %}
+            <li class="list-group-item list-group-item-danger">
+              <i class="fas fa-exclamation-circle me-2"></i>{{ indicator }}
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+
+        <!-- VirusTotal Results -->
+        {% if result.virustotal %}
+        <div class="mt-4">
+          <h5 class="text-primary">
+            <i class="fas fa-shield-alt me-2"></i>VirusTotal Results
+          </h5>
+          <div class="card">
+            <div class="card-body">
+              {% if result.virustotal.data and result.virustotal.data.attributes
+              %} {% set attributes = result.virustotal.data.attributes %} {% set
+              stats = attributes.last_analysis_stats %}
+
+              <div class="row">
+                <!-- Detection Score Circle -->
+                <div class="col-md-3 text-center">
+                  <div
+                    style="width: 150px; height: 150px; border-radius: 50%; background-color: {% if stats.malicious == 0 %}rgba(64, 192, 128, 0.2){% else %}rgba(220, 53, 69, 0.2){% endif %}; margin: 0 auto; display: flex; justify-content: center; align-items: center;"
+                  >
+                    <div style="text-align: center">
+                      <h1
+                        style="font-size: 42px; margin: 0; color: {% if stats.malicious == 0 %}#40c080{% else %}#dc3545{% endif %};"
+                      >
+                        {{ stats.malicious }}
+                      </h1>
+                      <p style="margin: 0; font-size: 16px; color: #999">
+                        / {{ stats.malicious + stats.suspicious +
+                        stats.undetected + stats.harmless }}
+                      </p>
+                    </div>
+                  </div>
+                  <div class="mt-3 mb-3">
+                    {% if stats.malicious == 0 %}
+                    <div class="alert alert-success py-2">
+                      <i class="fas fa-check-circle me-2"></i>No security
+                      vendors flagged this file as malicious
+                    </div>
+                    {% else %}
+                    <div class="alert alert-danger py-2">
+                      <i class="fas fa-exclamation-triangle me-2"></i>{{
+                      stats.malicious }} security vendors flagged this file as
+                      malicious
+                    </div>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <div class="col-md-9">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <table class="table table-borderless table-sm">
+                        <tbody>
+                          <tr>
+                            <td width="150"><strong>File name:</strong></td>
+                            <td>{{ result.filename }}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>SHA-256:</strong></td>
+                            <td>
+                              <code>{{ result.virustotal.data.id }}</code>
+                            </td>
+                          </tr>
+                          {% if attributes.md5 %}
+                          <tr>
+                            <td><strong>MD5:</strong></td>
+                            <td><code>{{ attributes.md5 }}</code></td>
+                          </tr>
+                          {% endif %} {% if attributes.size %}
+                          <tr>
+                            <td><strong>Size:</strong></td>
+                            <td>{{ attributes.size|filesizeformat }}</td>
+                          </tr>
+                          {% endif %}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div class="col-md-6">
+                      <div class="card mb-3">
+                        <div class="card-header bg-light py-2">
+                          <h6 class="m-0">Detection Statistics</h6>
+                        </div>
+                        <div class="card-body p-2">
+                          <div class="progress mb-2" style="height: 20px">
+                            {% set total = stats.malicious + stats.suspicious +
+                            stats.undetected + stats.harmless %}
+                            <div
+                              class="progress-bar bg-danger"
+                              role="progressbar"
+                              style="width: {{ (stats.malicious / total * 100)|round(1) }}%"
+                              aria-valuenow="{{ stats.malicious }}"
+                              aria-valuemin="0"
+                              aria-valuemax="{{ total }}"
+                            >
+                              {{ stats.malicious }}
+                            </div>
+                            <div
+                              class="progress-bar bg-warning"
+                              role="progressbar"
+                              style="width: {{ (stats.suspicious / total * 100)|round(1) }}%"
+                              aria-valuenow="{{ stats.suspicious }}"
+                              aria-valuemin="0"
+                              aria-valuemax="{{ total }}"
+                            >
+                              {{ stats.suspicious }}
+                            </div>
+                            <div
+                              class="progress-bar bg-success"
+                              role="progressbar"
+                              style="width: {{ (stats.harmless / total * 100)|round(1) }}%"
+                              aria-valuenow="{{ stats.harmless }}"
+                              aria-valuemin="0"
+                              aria-valuemax="{{ total }}"
+                            >
+                              {{ stats.harmless }}
+                            </div>
+                            <div
+                              class="progress-bar bg-secondary"
+                              role="progressbar"
+                              style="width: {{ (stats.undetected / total * 100)|round(1) }}%"
+                              aria-valuenow="{{ stats.undetected }}"
+                              aria-valuemin="0"
+                              aria-valuemax="{{ total }}"
+                            >
+                              {{ stats.undetected }}
+                            </div>
+                          </div>
+                          <div
+                            class="d-flex justify-content-between small text-muted"
+                          >
+                            <span
+                              ><i class="fas fa-circle text-danger"></i>
+                              Malicious ({{ stats.malicious }})</span
+                            >
+                            <span
+                              ><i class="fas fa-circle text-warning"></i>
+                              Suspicious ({{ stats.suspicious }})</span
+                            >
+                            <span
+                              ><i class="fas fa-circle text-success"></i> Clean
+                              ({{ stats.harmless }})</span
+                            >
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="mb-2">
+                        <span class="badge bg-secondary me-1"
+                          >Last Analysis: {{
+                          attributes.last_analysis_date|timestamp_to_date
+                          }}</span
+                        >
+                        {% if attributes.type %}
+                        <span class="badge bg-info me-1"
+                          >{{ attributes.type|upper }}</span
+                        >
+                        {% endif %}
+                        <a
+                          href="https://www.virustotal.com/gui/file/{{ result.virustotal.data.id }}"
+                          target="_blank"
+                          class="badge bg-primary"
+                        >
+                          <i class="fas fa-external-link-alt me-1"></i>View on
+                          VirusTotal
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {% if stats.malicious > 0 or stats.suspicious > 0 %}
+              <div class="mt-3">
+                <h6>Detections</h6>
+                <div class="table-responsive">
+                  <table class="table table-sm table-hover">
+                    <thead>
+                      <tr>
+                        <th>Antivirus</th>
+                        <th>Result</th>
+                        <th>Category</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for engine, result in
+                      attributes.last_analysis_results.items() %} {% if
+                      result.category in ['malicious', 'suspicious'] %}
+                      <tr
+                        class="{% if result.category == 'malicious' %}table-danger{% elif result.category == 'suspicious' %}table-warning{% endif %}"
+                      >
+                        <td>{{ engine }}</td>
+                        <td>{{ result.result if result.result else 'N/A' }}</td>
+                        <td>
+                          {% if result.category == 'malicious' %}
+                          <span class="badge bg-danger">Malicious</span>
+                          {% elif result.category == 'suspicious' %}
+                          <span class="badge bg-warning text-dark"
+                            >Suspicious</span
+                          >
+                          {% endif %}
+                        </td>
+                      </tr>
+                      {% endif %} {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              {% endif %} {% else %}
+              <div class="alert alert-info">
+                Waiting for VirusTotal analysis results. This may take a few
+                minutes.
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Detailed Analysis Tabs -->
+<div class="card shadow">
+  <div class="card-header">
+    <ul class="nav nav-tabs card-header-tabs" id="analysisTab" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button
+          class="nav-link active"
+          id="sections-tab"
+          data-bs-toggle="tab"
+          data-bs-target="#sections"
+          type="button"
+          role="tab"
+        >
+          <i class="fas fa-puzzle-piece me-1"></i>Sections
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button
+          class="nav-link"
+          id="imports-tab"
+          data-bs-toggle="tab"
+          data-bs-target="#imports"
+          type="button"
+          role="tab"
+        >
+          <i class="fas fa-download me-1"></i>Imports
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button
+          class="nav-link"
+          id="header-tab"
+          data-bs-toggle="tab"
+          data-bs-target="#header"
+          type="button"
+          role="tab"
+        >
+          <i class="fas fa-file-invoice me-1"></i>Headers
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button
+          class="nav-link"
+          id="resources-tab"
+          data-bs-toggle="tab"
+          data-bs-target="#resources"
+          type="button"
+          role="tab"
+        >
+          <i class="fas fa-boxes me-1"></i>Resources
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button
+          class="nav-link"
+          id="strings-tab"
+          data-bs-toggle="tab"
+          data-bs-target="#strings"
+          type="button"
+          role="tab"
+        >
+          <i class="fas fa-font me-1"></i>Strings
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button
+          class="nav-link"
+          id="features-tab"
+          data-bs-toggle="tab"
+          data-bs-target="#features"
+          type="button"
+          role="tab"
+        >
+          <i class="fas fa-chart-pie me-1"></i>Features
+        </button>
+      </li>
+    </ul>
+  </div>
+  <div class="card-body">
+    <div class="tab-content" id="analysisTabContent">
+      <!-- Sections Tab -->
+      <div class="tab-pane fade show active" id="sections" role="tabpanel">
+        <div class="row mb-4">
+          <div class="col-12">
+            <h5 class="mb-3">Section-wise Entropy Analysis</h5>
+            <p class="mb-3">
+              <small class="text-muted"
+                >Entropy measures the randomness of data in each section. Values
+                close to 0 indicate repetitive data, while values close to 8.0
+                indicate highly random (potentially encrypted or compressed)
+                data. High entropy sections (>7.0) are often found in packed
+                malware.</small
+              >
+            </p>
+
+            <div class="table-responsive">
+              <table class="table table-bordered table-hover">
+                <thead class="table-light">
+                  <tr>
+                    <th>Section</th>
+                    <th>Entropy</th>
+                    <th style="width: 40%">Entropy Distribution</th>
+                    <th>Size</th>
+                    <th>Properties</th>
+                    <th>Flags</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for section in result.sections %}
+                  <tr>
+                    <td>
+                      <strong>{{ section.name }}</strong>
+                      {% if section.suspicious %}
+                      <i
+                        class="fas fa-exclamation-triangle text-warning ms-2"
+                        data-bs-toggle="tooltip"
+                        title="{{ section.suspicious|join(', ') }}"
+                      ></i>
+                      {% endif %}
+                    </td>
+                    <td
+                      class="{% if section.entropy > 7.0 %}text-danger fw-bold{% elif section.entropy > 6.5 %}text-warning{% endif %}"
+                    >
+                      {{ "%.2f"|format(section.entropy) }}
+                    </td>
+                    <td>
+                      <div class="progress" style="height: 20px">
+                        {% set entropy_percent = (section.entropy / 8) * 100 %}
+                        {% if section.entropy > 7.0 %} {% set bar_class =
+                        "bg-danger" %} {% elif section.entropy > 6.0 %} {% set
+                        bar_class = "bg-warning" %} {% else %} {% set bar_class
+                        = "bg-success" %} {% endif %}
+
+                        <div
+                          class="progress-bar {{ bar_class }}"
+                          role="progressbar"
+                          style="width: {{ entropy_percent }}%;"
+                          aria-valuenow="{{ section.entropy }}"
+                          aria-valuemin="0"
+                          aria-valuemax="8"
+                        ></div>
+                      </div>
+                    </td>
+                    <td>
+                      {{ section.raw_size|filesizeformat }}
+                      <small class="d-block text-muted"
+                        >Virtual: {{ section.virtual_size|filesizeformat
+                        }}</small
+                      >
+                    </td>
+                    <td>
+                      {% if section.contains_code %}
+                      <span class="badge bg-primary">Code</span>
+                      {% endif %} {% if section.is_executable %}
+                      <span class="badge bg-success">Executable</span>
+                      {% endif %} {% if section.is_writable %}
+                      <span class="badge bg-info">Writable</span>
+                      {% endif %} {% if section.contains_data %}
+                      <span class="badge bg-secondary">Initialized Data</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <button
+                        class="btn btn-sm btn-outline-dark"
+                        data-bs-toggle="tooltip"
+                        data-bs-html="true"
+                        title="Section Characteristics: 0x{{ '%08X' % section.characteristics }}"
+                      >
+                        <i class="fas fa-info-circle"></i>
+                      </button>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <h5>Section Entropy Distribution</h5>
+            <div class="card">
+              <div class="card-body p-3">
+                <div
+                  class="chart-container"
+                  style="position: relative; height: 350px; width: 100%"
+                >
+                  <canvas id="entropyChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <h5>Section Size Distribution</h5>
+            <div class="card">
+              <div class="card-body p-3">
+                <div
+                  class="chart-container"
+                  style="position: relative; height: 350px; width: 100%"
+                >
+                  <canvas id="sizeChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Imports Tab -->
+      <div class="tab-pane fade" id="imports" role="tabpanel">
+        <div class="row">
+          <!-- DLL Names -->
+          <div class="col-md-4">
+            <h5 class="mb-3">Imported DLLs ({{ result.dll_names|length }})</h5>
+            {% if result.dll_names %}
+            <ul class="list-group">
+              {% for dll in result.dll_names %}
+              <li class="list-group-item">
+                <i class="fas fa-file-code me-2 text-primary"></i>{{ dll }}
+              </li>
+              {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted">No imported DLLs found.</p>
+            {% endif %}
+          </div>
+          <!-- Imported Functions -->
+          <div class="col-md-8">
+            <h5 class="mb-3">Imported Functions ({{ result.num_imports }})</h5>
+            {% if result.import_names %}
+            <div class="form-floating mb-3">
+              <input
+                type="text"
+                class="form-control"
+                id="importSearch"
+                placeholder="Search imports"
+              />
+              <label for="importSearch">Search imports</label>
+            </div>
+            <ul class="list-group string-list import-list">
+              {% for import in result.import_names %}
+              <li class="list-group-item import-item">
+                <small>{{ import }}</small>
+              </li>
+              {% endfor %} {% if result.num_imports > result.import_names|length
+              %}
+              <li class="list-group-item text-muted">
+                ... and {{ result.num_imports - result.import_names|length }}
+                more imports
+              </li>
+              {% endif %}
+            </ul>
+            {% else %}
+            <p class="text-muted">No imported functions found.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Header Tab -->
+      <div class="tab-pane fade" id="header" role="tabpanel">
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <h5>PE Header Information</h5>
+            <table class="table table-sm header-info">
+              <tbody>
+                <tr>
+                  <th scope="row">Machine Type:</th>
+                  <td>{{ result.header.machine_type_name }}</td>
+                </tr>
+                <tr>
+                  <th scope="row">Subsystem:</th>
+                  <td>{{ result.header.subsystem_name }}</td>
+                </tr>
+                <tr>
+                  <th scope="row">Checksum:</th>
+                  <td>0x{{ '%08X' % result.header.checksum }}</td>
+                </tr>
+                <tr>
+                  <th scope="row">Image Base:</th>
+                  <td>0x{{ '%08X' % result.header.image_base }}</td>
+                </tr>
+                <tr>
+                  <th scope="row">Size of Image:</th>
+                  <td>{{ result.header.size_of_image|filesizeformat }}</td>
+                </tr>
+                <tr>
+                  <th scope="row">Size of Headers:</th>
+                  <td>{{ result.header.size_of_headers|filesizeformat }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="col-md-6">
+            <h5 class="mb-3">Characteristics</h5>
+            {% if result.characteristics_flags %} {% for flag in
+            result.characteristics_flags %}
+            <span class="badge bg-secondary characteristic-badge"
+              >{{ flag }}</span
+            >
+            {% endfor %} {% else %}
+            <p class="text-muted">No characteristics flags defined.</p>
+            {% endif %}
+
+            <h5 class="mt-4">DLL Characteristics</h5>
+            {% if result.dll_characteristics_flags %} {% for flag in
+            result.dll_characteristics_flags %}
+            <span class="badge bg-info characteristic-badge text-dark"
+              >{{ flag }}</span
+            >
+            {% endfor %} {% else %}
+            <p class="text-muted">No DLL characteristics flags defined.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Resources Tab -->
+      <div class="tab-pane fade" id="resources" role="tabpanel">
+        <h5 class="mb-3">Embedded Resources</h5>
+        {% if result.resources %}
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>Type</th>
+                <th>Count</th>
+                <th>Total Size</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for resource in result.resources %}
+              <tr class="resource-row">
+                <td>
+                  {% if resource.type_id == 16 %}
+                  <i class="fas fa-info-circle text-info me-2"></i>
+                  {% elif resource.type_id == 3 or resource.type_id == 14 %}
+                  <i class="fas fa-image text-success me-2"></i>
+                  {% elif resource.type_id == 24 %}
+                  <i class="fas fa-file-code text-primary me-2"></i>
+                  {% else %}
+                  <i class="fas fa-box text-secondary me-2"></i>
+                  {% endif %} {{ resource.type_name }}
+                </td>
+                <td>{{ resource.count }}</td>
+                <td>{{ resource.size|filesizeformat }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="text-muted">No resources found in this executable.</p>
+        {% endif %}
+      </div>
+
+      <!-- Strings Tab -->
+      <div class="tab-pane fade" id="strings" role="tabpanel">
+        <h5 class="mb-3">Extracted Strings ({{ result.num_strings }})</h5>
+        {% if result.ascii_strings %}
+        <div class="form-floating mb-3">
+          <input
+            type="text"
+            class="form-control"
+            id="stringSearch"
+            placeholder="Search strings"
+          />
+          <label for="stringSearch">Search strings</label>
+        </div>
+
+        <div class="string-list">
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>String</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for string in result.ascii_strings %}
+              <tr class="string-item">
+                <td width="50">{{ loop.index }}</td>
+                <td>{{ string }}</td>
+              </tr>
+              {% endfor %} {% if result.num_strings >
+              result.ascii_strings|length %}
+              <tr>
+                <td colspan="2" class="text-muted">
+                  ... and {{ result.num_strings - result.ascii_strings|length }}
+                  more strings
+                </td>
+              </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="text-muted">No significant strings found.</p>
+        {% endif %}
+      </div>
+
+      <!-- Features Tab -->
+      <div class="tab-pane fade" id="features" role="tabpanel">
+        <h5 class="mb-3">Key Features Used for Detection</h5>
+        <div class="row">
+          <div class="col-md-6">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Feature</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>File Size</td>
+                  <td>{{ result.file_size|filesizeformat }}</td>
+                </tr>
+                <tr>
+                  <td>Number of Sections</td>
+                  <td>{{ result.num_sections }}</td>
+                </tr>
+                <tr>
+                  <td>Digital Signature</td>
+                  <td>
+                    {% if result.has_signature %}Present{% else %}Absent{% endif
+                    %}
+                  </td>
+                </tr>
+                <tr>
+                  <td>Debug Information</td>
+                  <td>
+                    {% if result.has_debug %}Present{% else %}Absent{% endif %}
+                  </td>
+                </tr>
+                <tr>
+                  <td>Number of Imports</td>
+                  <td>{{ result.num_imports }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="col-md-6">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Feature</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Number of Exports</td>
+                  <td>{{ result.num_exports }}</td>
+                </tr>
+                <tr>
+                  <td>Mean Section Entropy</td>
+                  <td>{{ "%.2f"|format(result.sections_mean_entropy) }}/8.0</td>
+                </tr>
+                <tr>
+                  <td>Max Section Entropy</td>
+                  <td>{{ "%.2f"|format(result.sections_max_entropy) }}/8.0</td>
+                </tr>
+                <tr>
+                  <td>Number of Extracted Strings</td>
+                  <td>{{ result.num_strings }}</td>
+                </tr>
+                <tr>
+                  <td>Number of Imported DLLs</td>
+                  <td>{{ result.dll_names|length }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="text-center mt-4">
+  <a href="{{ url_for('dynamic_analyze') }}" class="btn btn-primary me-2">
+    <i class="fas fa-microscope me-2"></i>Run Dynamic Analysis
+  </a>
+  <a href="{{ url_for('index') }}" class="btn btn-secondary">
+    <i class="fas fa-upload me-2"></i>Analyze Another File
+  </a>
+</div>
+{% endblock %} {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+      // Initialize tooltips
+      var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+      var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+          return new bootstrap.Tooltip(tooltipTriggerEl)
+      })
+
+      // String search functionality
+      const stringSearch = document.getElementById('stringSearch');
+      if (stringSearch) {
+          stringSearch.addEventListener('input', function() {
+              filterItems('string-item', this.value);
+          });
+      }
+
+      // Import search functionality
+      const importSearch = document.getElementById('importSearch');
+      if (importSearch) {
+          importSearch.addEventListener('input', function() {
+              filterItems('import-item', this.value);
+          });
+      }
+
+      function filterItems(itemClass, searchTerm) {
+          const searchLower = searchTerm.toLowerCase();
+          const items = document.querySelectorAll('.' + itemClass);
+
+          items.forEach(item => {
+              const text = item.textContent.toLowerCase();
+              if (text.includes(searchLower)) {
+                  item.style.display = '';
+              } else {
+                  item.style.display = 'none';
+              }
+          });
+      }
+
+      // Create entropy chart
+      const entropyCtx = document.getElementById('entropyChart');
+      if (entropyCtx) {
+          const sections = {{ result.sections|tojson }};
+
+          new Chart(entropyCtx, {
+              type: 'bar',
+              data: {
+                  labels: sections.map(s => s.name),
+                  datasets: [{
+                      label: 'Entropy (0-8)',
+                      data: sections.map(s => s.entropy),
+                      backgroundColor: sections.map(s => {
+                          if (s.entropy > 7.0) return 'rgba(220, 53, 69, 0.85)';
+                          if (s.entropy > 6.0) return 'rgba(255, 193, 7, 0.85)';
+                          return 'rgba(40, 167, 69, 0.85)';
+                      }),
+                      borderColor: sections.map(s => {
+                          if (s.entropy > 7.0) return 'rgb(220, 53, 69)';
+                          if (s.entropy > 6.0) return 'rgb(255, 193, 7)';
+                          return 'rgb(40, 167, 69)';
+                      }),
+                      borderWidth: 2,
+                      barPercentage: 0.7,
+                      categoryPercentage: 0.8
+                  }]
+              },
+              options: {
+                  devicePixelRatio: 2, // Higher resolution
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  scales: {
+                      y: {
+                          beginAtZero: true,
+                          max: 8,
+                          title: {
+                              display: true,
+                              text: 'Entropy Value (0-8)',
+                              font: {
+                                  size: 14,
+                                  weight: 'bold'
+                              }
+                          },
+                          ticks: {
+                              font: {
+                                  size: 12
+                              }
+                          },
+                          grid: {
+                              color: 'rgba(0, 0, 0, 0.1)'
+                          }
+                      },
+                      x: {
+                          title: {
+                              display: true,
+                              text: 'Section Name',
+                              font: {
+                                  size: 14,
+                                  weight: 'bold'
+                              }
+                          },
+                          ticks: {
+                              font: {
+                                  size: 12,
+                                  weight: 'bold'
+                              }
+                          }
+                      }
+                  },
+                  plugins: {
+                      tooltip: {
+                          titleFont: {
+                              size: 14
+                          },
+                          bodyFont: {
+                              size: 13
+                          },
+                          callbacks: {
+                              afterLabel: function(context) {
+                                  const section = sections[context.dataIndex];
+                                  let flags = [];
+                                  if (section.contains_code) flags.push('Code');
+                                  if (section.is_executable) flags.push('Executable');
+                                  if (section.is_writable) flags.push('Writable');
+
+                                  let output = [];
+                                  if (flags.length) output.push('Flags: ' + flags.join(', '));
+                                  if (section.suspicious && section.suspicious.length) {
+                                      output.push('Warning: ' + section.suspicious[0]);
+                                  }
+                                  return output;
+                              }
+                          }
+                      },
+                      legend: {
+                          display: true,
+                          position: 'top',
+                          labels: {
+                              font: {
+                                  size: 13
+                              }
+                          }
+                      },
+                      title: {
+                          display: true,
+                          text: 'Section Entropy Analysis',
+                          font: {
+                              size: 16,
+                              weight: 'bold'
+                          }
+                      }
+                  }
+              }
+          });
+
+          // Create size chart
+          const sizeCtx = document.getElementById('sizeChart');
+          if (sizeCtx) {
+              new Chart(sizeCtx, {
+                  type: 'bar',
+                  data: {
+                      labels: sections.map(s => s.name),
+                      datasets: [{
+                          label: 'Raw Size',
+                          data: sections.map(s => s.raw_size),
+                          backgroundColor: 'rgba(0, 123, 255, 0.75)',
+                          borderColor: 'rgb(0, 123, 255)',
+                          borderWidth: 2,
+                          barPercentage: 0.65,
+                          categoryPercentage: 0.8
+                      },
+                      {
+                          label: 'Virtual Size',
+                          data: sections.map(s => s.virtual_size),
+                          backgroundColor: 'rgba(40, 167, 69, 0.75)',
+                          borderColor: 'rgb(40, 167, 69)',
+                          borderWidth: 2,
+                          barPercentage: 0.65,
+                          categoryPercentage: 0.8
+                      }]
+                  },
+                  options: {
+                      devicePixelRatio: 2, // Higher resolution
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      scales: {
+                          y: {
+                              beginAtZero: true,
+                              title: {
+                                  display: true,
+                                  text: 'Size (bytes)',
+                                  font: {
+                                      size: 14,
+                                      weight: 'bold'
+                                  }
+                              },
+                              ticks: {
+                                  font: {
+                                      size: 12
+                                  },
+                                  // Format large numbers with K, M, etc.
+                                  callback: function(value, index, values) {
+                                      if (value >= 1000000) return (value/1000000).toFixed(1) + 'M';
+                                      else if (value >= 1000) return (value/1000).toFixed(1) + 'K';
+                                      return value;
+                                  }
+                              },
+                              grid: {
+                                  color: 'rgba(0, 0, 0, 0.1)'
+                              }
+                          },
+                          x: {
+                              title: {
+                                  display: true,
+                                  text: 'Section Name',
+                                  font: {
+                                      size: 14,
+                                      weight: 'bold'
+                                  }
+                              },
+                              ticks: {
+                                  font: {
+                                      size: 12,
+                                      weight: 'bold'
+                                  }
+                              }
+                          }
+                      },
+                      plugins: {
+                          tooltip: {
+                              titleFont: {
+                                  size: 14
+                              },
+                              bodyFont: {
+                                  size: 13
+                              },
+                              callbacks: {
+                                  label: function(context) {
+                                      let label = context.dataset.label || '';
+                                      if (label) {
+                                          label += ': ';
+                                      }
+                                      let value = context.parsed.y;
+                                      if (value >= 1048576) {
+                                          return label + (value / 1048576).toFixed(2) + ' MB';
+                                      } else if (value >= 1024) {
+                                          return label + (value / 1024).toFixed(2) + ' KB';
+                                      } else {
+                                          return label + value + ' bytes';
+                                      }
+                                  }
+                              }
+                          },
+                          legend: {
+                              display: true,
+                              position: 'top',
+                              labels: {
+                                  font: {
+                                      size: 13
+                                  }
+                              }
+                          },
+                          title: {
+                              display: true,
+                              text: 'Section Size Comparison',
+                              font: {
+                                  size: 16,
+                                  weight: 'bold'
+                              }
+                          }
+                      }
+                  }
+              });
+          }
+      }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,163 @@
+/* Custom styles for PE File Analyzer */
+
+/* General body styling */
+body {
+    background-color: #f8f9fa;
+    color: #333;
+}
+
+/* Card styling */
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 20px;
+}
+
+.card-header {
+    border-bottom: none;
+    padding: 12px 20px;
+}
+
+/* Dashboard cards */
+.info-card {
+    transition: transform 0.3s;
+}
+
+.info-card:hover {
+    transform: translateY(-5px);
+}
+
+/* Score gauge styling */
+.score-gauge {
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s;
+}
+
+.score-gauge:hover {
+    transform: scale(1.05);
+}
+
+/* Tab styling */
+.nav-tabs .nav-link {
+    color: #495057;
+    border: none;
+    padding: 10px 15px;
+    font-size: 1rem;
+    border-radius: 0;
+    transition: all 0.2s;
+}
+
+.nav-tabs .nav-link:hover {
+    color: #007bff;
+    background-color: #f8f9fa;
+}
+
+.nav-tabs .nav-link.active {
+    color: #007bff;
+    background-color: #fff;
+    border-bottom: 3px solid #007bff;
+}
+
+/* List groups */
+.list-group-item {
+    border-left: none;
+    border-right: none;
+    padding: 10px 15px;
+    transition: background-color 0.2s;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fa;
+}
+
+/* Footer */
+.footer {
+    margin-top: 50px;
+    padding: 20px 0;
+    border-top: 1px solid #eee;
+}
+
+/* String search box */
+#stringSearch {
+    border-radius: 20px;
+    transition: box-shadow 0.3s;
+}
+
+#stringSearch:focus {
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* String list styling */
+.string-list {
+    border: 1px solid #eee;
+    border-radius: 4px;
+    padding: 10px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .score-value {
+        font-size: 2rem;
+    }
+    
+    .verdict-badge {
+        font-size: 1rem;
+    }
+}
+
+/* Animation for the upload button */
+.btn-primary {
+    position: relative;
+    overflow: hidden;
+    transition: background-color 0.3s;
+}
+
+.btn-primary:after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.5);
+    opacity: 0;
+    border-radius: 100%;
+    transform: scale(1, 1) translate(-50%);
+    transform-origin: 50% 50%;
+}
+
+.btn-primary:focus:not(:active)::after {
+    animation: ripple 1s ease-out;
+}
+
+@keyframes ripple {
+    0% {
+        transform: scale(0, 0);
+        opacity: 0.5;
+    }
+    100% {
+        transform: scale(20, 20);
+        opacity: 0;
+    }
+}
