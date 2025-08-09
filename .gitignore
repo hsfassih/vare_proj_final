@@ -9,5 +9,8 @@ Procmon.exe
 Procmon64.exe
 Regshot_cmd-x64-ANSI.exe
 
+# Large files that exceed GitHub's size limit
+start.hivu
+
 #hive file for dynamic analysis
 start.hivu
