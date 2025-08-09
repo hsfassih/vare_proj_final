@@ -8,3 +8,6 @@ OUTPUT/
 Procmon.exe
 Procmon64.exe
 Regshot_cmd-x64-ANSI.exe
+
+#hive file for dynamic analysis
+start.hivu
