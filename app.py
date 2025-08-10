@@ -17,6 +17,28 @@ import numpy as np
 import subprocess
 import datetime
 
+# --- Azure Monitor OpenTelemetry (Live Metrics) ------------------------------
+# pip install azure-monitor-opentelemetry
+# Make sure APPLICATIONINSIGHTS_CONNECTION_STRING is set in environment
+try:
+    from azure.monitor.opentelemetry import configure_azure_monitor
+
+    _ai_conn = os.environ.get("APPLICATIONINSIGHTS_CONNECTION_STRING")
+    if _ai_conn:
+        configure_azure_monitor(
+            connection_string=_ai_conn,
+            enable_live_metrics=True  # <-- this turns on Live Metrics for Python
+        )
+    else:
+        print(
+            "[AzureMonitor] APPLICATIONINSIGHTS_CONNECTION_STRING not set; "
+            "telemetry/live metrics will be disabled."
+        )
+except Exception as _e:
+    # Do not crash the app if telemetry init fails
+    print(
+        f"[AzureMonitor] Failed to initialize Azure Monitor OpenTelemetry: {_e}")
+
 # Add the dynamic analysis folder to the path for importing the malware classifier
 sys.path.append(os.path.join(os.path.dirname(__file__), 'dynamic analysis'))
 
