@@ -23,7 +23,7 @@ import datetime
 try:
     from azure.monitor.opentelemetry import configure_azure_monitor
 
-    _ai_conn = os.environ.get("APPLICATIONINSIGHTS_CONNECTION_STRING")
+    _ai_conn = os.environ.get("InstrumentationKey=d01ab177-f8ae-4cce-80db-b38adc40f155;IngestionEndpoint=https://centralus-2.in.applicationinsights.azure.com/;LiveEndpoint=https://centralus.livediagnostics.monitor.azure.com/;ApplicationId=6ce873af-265d-4467-83c0-341ca145bed7")
     if _ai_conn:
         configure_azure_monitor(
             connection_string=_ai_conn,
